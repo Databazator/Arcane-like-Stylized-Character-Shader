@@ -98,6 +98,7 @@ Shader "ArcanelikeStylized/StylizedCharacterShader"
                     float3 positionWS: TEXCOORD2;
                     float3 viewWS: TEXCOORD3;
                     float4 tangentWS: TEXCOORD4;
+                    float3 rimLightPosWS: TEXCOORD5;
                 };
 
                 float3 GetRimLightPosition(float3 viewWS, float3 positionWS, float3 offsetWS)
@@ -107,7 +108,8 @@ Shader "ArcanelikeStylized/StylizedCharacterShader"
                     //calculate basis vectors
                     float3 tempUp = abs(viewWS.y) < 0.99 
                       ?  float3(0,1,0)
-                      :  float3(1,0,0);
+                      :  float3(0,0,1
+                          );
                     float3 side = normalize(cross(tempUp, forward));
                     float3 up = cross(side, forward);
 
@@ -131,6 +133,7 @@ Shader "ArcanelikeStylized/StylizedCharacterShader"
                     o.normalWS = TransformObjectToWorldNormal(i.normalOS);
                     o.positionWS = TransformObjectToWorld(i.positionOS.xyz);
                     o.viewWS = GetWorldSpaceViewDir(o.positionWS);
+                    o.rimLightPosWS = GetRimLightPosition(normalize(o.viewWS).xyz, o.positionWS.xyz, _RimLightOffset.xyz);
 
                     o.tangentWS = float4(TransformObjectToWorldDir(i.tangentOS.xyz), i.tangentOS.w);
 
@@ -189,7 +192,7 @@ Shader "ArcanelikeStylized/StylizedCharacterShader"
 
                     // ------------------------------------------------------
                     // Rim Light - position defined by offset relative to view direction
-                    float3 rimLightPosition = GetRimLightPosition(viewWS.xyz, i.positionWS.xyz, _RimLightOffset.xyz);
+                    float3 rimLightPosition = i.rimLightPosWS;//GetRimLightPosition(viewWS.xyz, i.positionWS.xyz, _RimLightOffset.xyz); //i.rimLightPosWS;//
                     float3 toRimLightDirection = normalize(rimLightPosition - i.positionWS) * -1; //has to be flipped, dunno why, goes against my intuition
                     // stepped lighting pass mask
                     int dontUseSteppedLightingMask = (int)(saturate(1 - _RimLightLightingPassMaskStepEdge));
